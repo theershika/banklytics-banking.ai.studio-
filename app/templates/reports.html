@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 no-print">
+    <div>
+        <h2 class="text-white fw-bold mb-1"><i class="bi bi-file-earmark-text text-cyan me-2"></i>Monthly Reports</h2>
+        <p class="text-muted small mb-0">Official statements for Account #{{ account.account_number }}</p>
+    </div>
+
+    <!-- Month & Year Selector -->
+    <form method="GET" class="d-flex gap-2">
+        <select name="month" class="form-select form-select-sm">
+            {% for m_val, m_name in months_list %}
+            <option value="{{ m_val }}" {{ 'selected' if m_val == selected_month else '' }}>{{ m_name }}</option>
+            {% endfor %}
+        </select>
+        <select name="year" class="form-select form-select-sm">
+            {% for y in available_years %}
+            <option value="{{ y }}" {{ 'selected' if y == selected_year else '' }}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm btn-cyan">View</button>
+        <a href="{{ url_for('reports.export_monthly_csv', year=selected_year, month=selected_month) }}" class="btn btn-sm btn-outline-secondary text-light">
+            <i class="bi bi-download"></i> CSV
+        </a>
+        <button type="button" onclick="window.print()" class="btn btn-sm btn-outline-light">
+            <i class="bi bi-printer"></i> Print / PDF
+        </button>
+    </form>
+</div>
+
+<!-- Statement Container -->
+<div class="card card-custom p-4 p-md-5">
+    <!-- Statement Letterhead -->
+    <div class="d-flex justify-content-between align-items-start border-bottom border-custom pb-4 mb-4">
+        <div>
+            <h4 class="fw-bold text-white mb-1">Account<span class="text-cyan">Pulse</span> Bank</h4>
+            <p class="text-muted small mb-0">Simulated Financial Transaction & Analysis Division</p>
+            <p class="text-muted text-xs mb-0">Academic Project 16 • Certified Simulated Ledger</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary bg-opacity-25 text-cyan border border-primary border-opacity-50 px-3 py-1 mb-1">
+                MONTHLY STATEMENT
+            </span>
+            <h5 class="text-white fw-bold mb-0">{{ statement.month_name }}</h5>
+        </div>
+    </div>
+
+    <!-- Account Details Strip -->
+    <div class="row p-3 card-inner mb-4 g-2">
+        <div class="col-md-6">
+            <span class="text-xs text-uppercase text-muted d-block">Account Holder</span>
+            <strong class="text-white">{{ current_user.full_name }}</strong>
+            <span class="text-muted small d-block">{{ current_user.email }}</span>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <span class="text-xs text-uppercase text-muted d-block">Account Details</span>
+            <strong class="text-cyan font-monospace">Acct #{{ account.account_number }} ({{ account.account_type }})</strong>
+            <span class="text-muted small d-block">Currency: INR (₹)</span>
+        </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="row g-2 mb-4 text-center">
+        <div class="col">
+            <div class="p-3 card-inner">
+                <span class="text-xs text-uppercase text-muted d-block">Opening Balance</span>
+                <span class="font-monospace fw-bold text-white fs-6">₹{{ "%.2f"|format(statement.opening_balance) }}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="p-3 card-inner">
+                <span class="text-xs text-uppercase text-muted d-block">Total Deposits</span>
+                <span class="font-monospace fw-bold text-success fs-6">+₹{{ "%.2f"|format(statement.total_deposits) }}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="p-3 card-inner">
+                <span class="text-xs text-uppercase text-muted d-block">Total Withdrawals</span>
+                <span class="font-monospace fw-bold text-danger fs-6">-₹{{ "%.2f"|format(statement.total_withdrawals) }}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="p-3 card-inner">
+                <span class="text-xs text-uppercase text-muted d-block">Net Cash Flow</span>
+                <span class="font-monospace fw-bold {{ 'text-cyan' if statement.net_change >= 0 else 'text-danger' }} fs-6">
+                    ₹{{ "%.2f"|format(statement.net_change) }}
+                </span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="p-3 card-inner">
+                <span class="text-xs text-uppercase text-muted d-block">Closing Balance</span>
+                <span class="font-monospace fw-bold text-white fs-6">₹{{ "%.2f"|format(statement.closing_balance) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itemized Monthly Transactions -->
+    <h6 class="fw-bold text-white mb-3">Itemized Activity ({{ statement.transaction_count }} record{{ 's' if statement.transaction_count != 1 else '' }})</h6>
+    {% if statement.transactions %}
+    <div class="table-responsive">
+        <table class="table table-dark-custom align-middle">
+            <thead>
+                <tr class="text-xs text-uppercase text-muted">
+                    <th>Date & Time (UTC)</th>
+                    <th>Ref ID</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end">Balance After</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in statement.transactions %}
+                <tr>
+                    <td class="font-monospace small text-muted">{{ t.transaction_date.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+                    <td class="font-monospace small text-cyan">{{ t.transaction_id }}</td>
+                    <td>
+                        {% if t.transaction_type == 'DEPOSIT' %}
+                        <span class="badge bg-success bg-opacity-25 text-success">DEPOSIT</span>
+                        {% else %}
+                        <span class="badge bg-danger bg-opacity-25 text-danger">WITHDRAWAL</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-light">{{ t.description or 'Simulated Transaction' }}</td>
+                    <td class="text-end font-monospace fw-bold {{ 'text-success' if t.transaction_type == 'DEPOSIT' else 'text-danger' }}">
+                        {{ '+' if t.transaction_type == 'DEPOSIT' else '-' }}₹{{ "%.2f"|format(t.amount) }}
+                    </td>
+                    <td class="text-end font-monospace small text-light">₹{{ "%.2f"|format(t.balance_after) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="p-4 card-inner text-center text-muted">
+        <p class="mb-0">No transactions recorded for {{ statement.month_name }}. Opening and closing balance remained constant.</p>
+    </div>
+    {% endif %}
+
+    <div class="pt-4 mt-4 border-top border-custom d-flex justify-content-between text-muted text-xs">
+        <span>Verified Educational Simulation Statement</span>
+        <span>AccountPulse Platform</span>
+    </div>
+</div>
+{% endblock %}

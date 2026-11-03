@@ -1,0 +1,6 @@
+{
+  "name": "AccountPulse - Banking Transaction Analysis System",
+  "description": "Educational banking simulation & transaction analytics platform with simulated deposits, withdrawals, monthly summaries, and rule-based anomaly detection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

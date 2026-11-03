@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="text-white fw-bold mb-1"><i class="bi bi-bar-chart-line text-cyan me-2"></i>Financial Analytics</h2>
+        <p class="text-muted small mb-0">Pandas & NumPy computed metrics for Account #{{ account.account_number }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('analytics.download_chart') }}" class="btn btn-cyan btn-sm d-flex align-items-center gap-1.5">
+            <i class="bi bi-file-earmark-image"></i> Download Matplotlib Chart (.PNG)
+        </a>
+    </div>
+</div>
+
+<!-- KPI Metrics Grid -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card card-custom p-3">
+            <span class="text-xs text-uppercase text-muted fw-bold">Average Transaction Size</span>
+            <h4 class="text-white font-monospace fw-bold mt-1 mb-0">₹{{ "%.2f"|format(stats.average_transaction) }}</h4>
+            <span class="text-xs text-muted mt-1">{{ stats.transaction_count }} ledger events</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-custom p-3">
+            <span class="text-xs text-uppercase text-muted fw-bold">Highest Single Deposit</span>
+            <h4 class="text-success font-monospace fw-bold mt-1 mb-0">₹{{ "%.2f"|format(stats.highest_deposit) }}</h4>
+            <span class="text-xs text-muted mt-1">{{ stats.deposit_count }} credits</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-custom p-3">
+            <span class="text-xs text-uppercase text-muted fw-bold">Highest Single Withdrawal</span>
+            <h4 class="text-danger font-monospace fw-bold mt-1 mb-0">₹{{ "%.2f"|format(stats.highest_withdrawal) }}</h4>
+            <span class="text-xs text-muted mt-1">{{ stats.withdrawal_count }} debits</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-custom p-3">
+            <span class="text-xs text-uppercase text-muted fw-bold">Net Balance Change</span>
+            <h4 class="{{ 'text-cyan' if stats.net_balance_change >= 0 else 'text-danger' }} font-monospace fw-bold mt-1 mb-0">
+                ₹{{ "%.2f"|format(stats.net_balance_change) }}
+            </h4>
+            <span class="text-xs text-muted mt-1">Total deposits - withdrawals</span>
+        </div>
+    </div>
+</div>
+
+<!-- 4 Interactive Chart.js Visualizations -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Deposits vs Withdrawals Bar Chart -->
+    <div class="col-lg-6">
+        <div class="card card-custom p-4 h-100">
+            <h5 class="text-white fw-bold mb-3"><i class="bi bi-bar-chart text-cyan me-2"></i>Deposits vs Withdrawals</h5>
+            <div style="height: 260px;">
+                <canvas id="depVsWithChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Transaction Distribution Doughnut Chart -->
+    <div class="col-lg-6">
+        <div class="card card-custom p-4 h-100">
+            <h5 class="text-white fw-bold mb-3"><i class="bi bi-pie-chart text-cyan me-2"></i>Volume Distribution</h5>
+            <div style="height: 260px;" class="d-flex justify-content-center">
+                <canvas id="distChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Monthly Net Cash Flow Bar Chart -->
+    <div class="col-lg-6">
+        <div class="card card-custom p-4 h-100">
+            <h5 class="text-white fw-bold mb-3"><i class="bi bi-graph-up text-cyan me-2"></i>Monthly Net Cash Flow</h5>
+            <div style="height: 260px;">
+                <canvas id="netFlowChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Account Balance Trajectory Line Chart -->
+    <div class="col-lg-6">
+        <div class="card card-custom p-4 h-100">
+            <h5 class="text-white fw-bold mb-3"><i class="bi bi-activity text-cyan me-2"></i>Balance Trajectory</h5>
+            <div style="height: 260px;">
+                <canvas id="balanceLineChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const trends = {{ stats.monthly_trends|tojson }};
+    const labels = trends.map(t => t.month);
+    const deposits = trends.map(t => t.deposits);
+    const withdrawals = trends.map(t => t.withdrawals);
+    const netFlows = trends.map(t => t.net_flow);
+    const closingBalances = trends.map(t => t.closing_balance);
+
+    // Chart 1: Dep vs With
+    new Chart(document.getElementById('depVsWithChart'), {
+        type: 'bar',
+        data: {
+            labels: labels.length ? labels : ['No Data'],
+            datasets: [
+                { label: 'Deposits', data: deposits, backgroundColor: '#10b981', borderRadius: 4 },
+                { label: 'Withdrawals', data: withdrawals, backgroundColor: '#f43f5e', borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+            },
+            plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
+    });
+
+    // Chart 2: Distribution
+    const totalDep = {{ stats.total_deposits|float }};
+    const totalWith = {{ stats.total_withdrawals|float }};
+    new Chart(document.getElementById('distChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Deposits', 'Withdrawals'],
+            datasets: [{
+                data: [totalDep, totalWith],
+                backgroundColor: ['#10b981', '#f43f5e'],
+                borderColor: '#1e293b',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#e2e8f0' } } }
+        }
+    });
+
+    // Chart 3: Net Cash Flow
+    new Chart(document.getElementById('netFlowChart'), {
+        type: 'bar',
+        data: {
+            labels: labels.length ? labels : ['No Data'],
+            datasets: [{
+                label: 'Net Flow (₹)',
+                data: netFlows,
+                backgroundColor: netFlows.map(v => v >= 0 ? '#06b6d4' : '#ef4444'),
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+            },
+            plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
+    });
+
+    // Chart 4: Balance Line
+    new Chart(document.getElementById('balanceLineChart'), {
+        type: 'line',
+        data: {
+            labels: labels.length ? labels : ['No Data'],
+            datasets: [{
+                label: 'Month-end Balance (₹)',
+                data: closingBalances,
+                borderColor: '#06b6d4',
+                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+            },
+            plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="text-white fw-bold mb-1"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Unusual Transaction Review</h2>
+    <p class="text-muted small mb-0">Rule-based anomaly detection ledger for Account #{{ account.account_number }}</p>
+</div>
+
+<!-- Mandatory Educational Notice -->
+<div class="alert alert-info card-custom border-info mb-4 d-flex gap-3 align-items-start">
+    <i class="bi bi-info-circle-fill fs-5 text-cyan mt-1"></i>
+    <div>
+        <strong class="d-block text-white">Educational Heuristic Rules Notice:</strong>
+        <span class="small text-light text-opacity-75">
+            These flags are deterministic educational triggers designed for simulated banking audit training — <strong>NOT</strong> fraud accusations or machine learning predictions.
+        </span>
+    </div>
+</div>
+
+<!-- Active Rules Grid -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card card-custom p-3 h-100">
+            <span class="text-warning fw-bold small d-block mb-1">Rule 1: High-Value Threshold</span>
+            <p class="text-muted small mb-0">Flags any single transaction meeting or exceeding ₹25,000.00.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom p-3 h-100">
+            <span class="text-warning fw-bold small d-block mb-1">Rule 2: Rapid Withdrawal Velocity</span>
+            <p class="text-muted small mb-0">Flags accounts recording 3 or more withdrawals within a rolling 60-minute window.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom p-3 h-100">
+            <span class="text-warning fw-bold small d-block mb-1">Rule 3: Historical Deviation Spike</span>
+            <p class="text-muted small mb-0">Flags transactions exceeding 3x the account's historical average amount.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Flags Table -->
+<div class="card card-custom p-4">
+    <h5 class="text-white fw-bold mb-3">Flagged Incidents ({{ flags|length }})</h5>
+    {% if flags %}
+    <div class="d-flex flex-column gap-3">
+        {% for f in flags %}
+        <div class="p-3 card-inner">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-warning bg-opacity-25 text-warning font-monospace">{{ f.rule_name }}</span>
+                <span class="badge {{ 'bg-warning text-dark' if f.review_status == 'PENDING_REVIEW' else 'bg-success' }}">
+                    {{ f.review_status }}
+                </span>
+            </div>
+            <p class="text-white small fw-bold mb-2">{{ f.reason }}</p>
+            <div class="d-flex justify-content-between align-items-center small text-muted pt-2 border-top border-custom">
+                <span>Ref: {{ f.transaction_id }} • {{ f.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+                {% if f.review_status == 'PENDING_REVIEW' %}
+                <form method="POST" action="{{ url_for('profile.update_flag', flag_id=f.flag_id) }}" class="d-flex gap-1">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="status" value="REVIEWED"/>
+                    <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2 text-xs">Verify & Mark Reviewed</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-shield-check fs-2 d-block mb-2 text-success"></i>
+        <p class="mb-0">No unusual transactions flagged. All transactions comply with default rules.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

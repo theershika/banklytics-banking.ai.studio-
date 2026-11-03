@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-lg-9 text-center">
+        <span class="badge bg-primary bg-opacity-25 text-cyan border border-primary border-opacity-50 px-3 py-2 rounded-pill mb-3">
+            Academic Project 16 — Banking Transaction Analysis System
+        </span>
+        <h1 class="display-4 fw-bold text-white mb-3">
+            Enterprise Financial Simulation & <span class="text-cyan">Transaction Analytics</span>
+        </h1>
+        <p class="lead text-light text-opacity-75 mb-4 mx-auto" style="max-width: 720px;">
+            A full-stack banking simulation platform powered by Python Flask, MySQL, and Pandas analytics. Simulate atomic deposits, withdrawals, monthly reports, and rule-based anomaly detection.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3 mb-5">
+            <a href="{{ url_for('auth.quick_demo_login', account_number=1001) }}" class="btn btn-cyan btn-lg px-4 py-2.5">
+                Launch Demo Account #1001 <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4 py-2.5">
+                Sign In
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg px-4 py-2.5 text-light">
+                Register Demo
+            </a>
+        </div>
+
+        <div class="p-3 card-inner text-muted small mx-auto" style="max-width: 650px;">
+            <i class="bi bi-shield-check text-success me-1"></i>
+            Strict educational simulation. Synthesized data only. Initial balance starts at ₹0.00 for all demo accounts.
+        </div>
+    </div>
+</div>
+
+<!-- 5 Initial Demo Accounts Showcase -->
+<div class="row g-3 mb-5">
+    <div class="col-12 text-center mb-2">
+        <h3 class="fw-bold text-white">5 Initial Demo Accounts</h3>
+        <p class="text-muted small">Pre-provisioned with initial ₹0.00 balance. Click to login directly:</p>
+    </div>
+    {% for acct in accounts %}
+    <div class="col-md">
+        <a href="{{ url_for('auth.quick_demo_login', account_number=acct.account_number) }}" class="text-decoration-none">
+            <div class="card card-custom p-3 h-100 hover-border text-start">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-secondary font-monospace">#{{ acct.account_number }}</span>
+                    <span class="badge bg-success bg-opacity-25 text-success">Active Demo</span>
+                </div>
+                <h6 class="text-white mb-1">{{ acct.customer.full_name }}</h6>
+                <p class="text-muted text-xs mb-2 font-monospace">{{ acct.customer.username }}</p>
+                <div class="mt-auto pt-2 border-top border-custom d-flex justify-content-between small">
+                    <span class="text-muted">Balance:</span>
+                    <span class="text-white font-monospace fw-bold">₹{{ "%.2f"|format(acct.balance) }}</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Key Features -->
+<div class="row g-4 py-4">
+    <div class="col-md-4">
+        <div class="card card-custom p-4 h-100">
+            <div class="fs-1 text-cyan mb-3"><i class="bi bi-database-lock"></i></div>
+            <h5 class="text-white fw-bold">Atomic Transaction Safety</h5>
+            <p class="text-muted small">
+                DECIMAL(15,2) precision prevents floating-point monetary errors. Database-level locking prevents negative balances and race conditions.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom p-4 h-100">
+            <div class="fs-1 text-success mb-3"><i class="bi bi-bar-chart-steps"></i></div>
+            <h5 class="text-white fw-bold">Pandas & NumPy Analytics</h5>
+            <p class="text-muted small">
+                Multi-dimensional statistical grouping by month, type, and account. Interactive Chart.js and vector figures for trend analysis and cash flow waterfalls.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom p-4 h-100">
+            <div class="fs-1 text-warning mb-3"><i class="bi bi-shield-exclamation"></i></div>
+            <h5 class="text-white fw-bold">Rule-Based Anomaly Review</h5>
+            <p class="text-muted small">
+                Deterministic heuristic triggers for single high-value amounts (≥ ₹25,000), withdrawal velocity bursts (3+ / hour), and statistical 3x mean spikes.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

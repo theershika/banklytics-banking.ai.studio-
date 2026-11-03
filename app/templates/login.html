@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-5">
+        <div class="card card-custom p-4 p-md-5 shadow-lg">
+            <div class="text-center mb-4">
+                <div class="badge bg-primary p-3 rounded-4 mb-2">
+                    <i class="bi bi-lock-fill fs-4 text-cyan"></i>
+                </div>
+                <h3 class="fw-bold text-white">Sign In</h3>
+                <p class="text-muted small">Access your simulated AccountPulse ledger</p>
+            </div>
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="mb-3">
+                    <label class="form-label text-xs text-uppercase text-muted fw-bold">Username or Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-person"></i></span>
+                        <input type="text" name="identifier" class="form-control" placeholder="demouser1 or demo1@accountpulse.edu" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-xs text-uppercase text-muted fw-bold">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-key"></i></span>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-cyan w-100 py-2.5 mb-3">Sign In to Account</button>
+            </form>
+
+            <div class="pt-3 border-top border-custom text-center">
+                <p class="text-muted small mb-2">Need a new account?</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-sm w-100 text-light">Register New Demo Account</a>
+            </div>
+
+            <!-- Examiner 1-Click Access -->
+            <div class="mt-4 p-3 card-inner text-center">
+                <span class="text-xs text-uppercase text-muted fw-bold d-block mb-2">1-Click Demo Logins</span>
+                <div class="btn-group w-100" role="group">
+                    <a href="{{ url_for('auth.quick_demo_login', account_number=1001) }}" class="btn btn-sm btn-outline-secondary">#1001</a>
+                    <a href="{{ url_for('auth.quick_demo_login', account_number=1002) }}" class="btn btn-sm btn-outline-secondary">#1002</a>
+                    <a href="{{ url_for('auth.quick_demo_login', account_number=1003) }}" class="btn btn-sm btn-outline-secondary">#1003</a>
+                    <a href="{{ url_for('auth.quick_demo_login', account_number=1004) }}" class="btn btn-sm btn-outline-secondary">#1004</a>
+                    <a href="{{ url_for('auth.quick_demo_login', account_number=1005) }}" class="btn btn-sm btn-outline-secondary">#1005</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
